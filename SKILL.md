@@ -106,8 +106,9 @@ process_week('教案模板.doc', '智能网联汽车概论_第2周教案.doc', d
 
 **关键规则**：
 - **不要**修改 row.Height/HeightRule/AllowBreakAcrossPages（模板行格式）
-- **不要**修改 paragraph.KeepWithNext/SpaceBefore/SpaceAfter
+- **不要**修改 cell 内容的 paragraph.KeepWithNext/SpaceBefore/SpaceAfter（内容单元格）
 - **仅**修改 cell text 和 font 属性 (Name, NameFarEast, Size, Bold)
+- "教案内容"标题必须位于第2页顶部（process_week 已内置 `PageBreakBefore=True` 自动处理，确保不留在第1页末尾）
 - 用 `shutil.copy2()` 复制模板再修改副本
 - Word COM 不稳定，已内置 `kill_word()` + 重试机制
 - 逐个文件处理，避免 COM 连接问题
@@ -132,5 +133,6 @@ MUST start with "通过X节课的学习，学生能够：" + specific measurable
 |-------|----------|
 | Word COM crashes | `kill_word()` + retry (内置) |
 | Table 2 on page 2 | Set rows 6-9 HeightRule=2, reduce height (内置) |
+| "教案内容"留在第1页末尾 | process_week 已内置：`PageBreakBefore=True` + `KeepWithNext=True` 强制标题到第2页顶部 |
 | Duplicate images | Always `shutil.copy2()` fresh template |
 | Chinese encoding | `# -*- coding: utf-8 -*-` in all scripts |

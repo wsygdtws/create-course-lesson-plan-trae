@@ -189,6 +189,18 @@ def process_week(template_name, output_name, data, images=None, retry=0):
                 t1.Rows(ri).Height = 60
             doc.Repaginate()
 
+        # Ensure "教案内容" title is at top of page 2 (not bottom of page 1)
+        t2_end = t2.Range.End
+        t3_start = t3.Range.Start
+        if t3_start > t2_end:
+            between_range = doc.Range(t2_end, t3_start)
+            for para in between_range.Paragraphs:
+                text = para.Range.Text.strip().replace('\r', '').replace('\x07', '')
+                if '教案内容' in text:
+                    para.PageBreakBefore = True
+                    para.KeepWithNext = True
+            doc.Repaginate()
+
         time.sleep(1)
         doc.Save()
         saved = True
