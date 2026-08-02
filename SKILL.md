@@ -17,6 +17,7 @@ Generates lesson plan `.doc` files based on Word templates, following the 工学
 4. **授课日期**: Confirm dates from the school calendar (校历)
 5. **课题内容来源**: Where to find course content? (百度网盘 path, local files, etc.)
 6. **排课方式**: Are all periods on the same day or spread across days? Which class on which day?
+7. **下载位置**: 当任务涉及从百度网盘、云盘或任何网络位置下载文档、素材或资源到本地时，**必须先主动询问用户**下载到哪个本地目录（如 `download_from_baidunet/`、项目根目录下指定子目录等），不得擅自决定下载路径。询问时应给出默认建议路径（如项目根目录下的 `download_from_baidunet/`）供用户确认或修改。只有在用户明确给出下载位置（或确认使用默认建议路径）后才能执行下载。
 
 **If ANY key information is unclear, STOP and ask the user. Do NOT guess or assume.**
 
