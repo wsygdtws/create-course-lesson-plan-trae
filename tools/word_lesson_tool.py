@@ -5,6 +5,69 @@ import subprocess
 import time
 import os
 
+# ========== 图片质量筛选辅助函数 ==========
+# 这些函数用于在生成教案时筛选出尺寸合适的配图，
+# 避免使用过小的图片或横幅图（如PDF中提取的页眉/分隔线），
+# 导致在Word文档中显示异常（高度过小看不清）。
+
+def is_good_image(fp, min_h=200, max_ratio=4.5, max_tall=3.0):
+    """判断图片质量是否合格。
+    过滤掉：高度过小（<min_h）、过宽横幅（宽高比>max_ratio）、过高竖图（高宽比>max_tall）的图片。
+    参数:
+        fp: 图片文件路径
+        min_h: 最小高度（像素），默认200
+        max_ratio: 最大宽高比，默认4.5（过滤横幅图）
+        max_tall: 最大高宽比，默认3.0（过滤过高的竖图）
+    返回: True 表示图片质量合格
+    """
+    try:
+        from PIL import Image
+        with Image.open(fp) as img:
+            w, h = img.size
+        return h >= min_h and (w / h) <= max_ratio and (h / w) <= max_tall
+    except:
+        return False
+
+def pick_images(img_dir, prefix, count=3, min_h=200):
+    """从指定目录按文件名前缀筛选质量合格的图片。
+    参数:
+        img_dir: 图片目录
+        prefix: 文件名前缀（如 'JetAuto_配件安装教程'）
+        count: 最多返回的图片数量
+        min_h: 最小高度（像素），传给 is_good_image
+    返回: list of (filepath, width, height) 元组
+    """
+    from PIL import Image
+    candidates = []
+    for fn in sorted(os.listdir(img_dir)):
+        if fn.startswith(prefix) and fn.endswith('.png'):
+            fp = os.path.join(img_dir, fn)
+            if is_good_image(fp, min_h):
+                try:
+                    with Image.open(fp) as img:
+                        w, h = img.size
+                    candidates.append((fp, w, h))
+                except:
+                    pass
+    return candidates[:count]
+
+def calc_width(w, h, target_h=None):
+    """根据图片宽高比计算合适的Word显示宽度(pt)。
+    参数:
+        w: 图片宽度（像素）
+        h: 图片高度（像素）
+        target_h: 目标高度(pt)，若指定则按高度反算宽度
+    返回: 显示宽度(pt)
+    """
+    if target_h:
+        return min(220, int(target_h * w / h))
+    ratio = w / h
+    if ratio < 0.8:  # 竖图
+        return 150
+    elif ratio > 3.0:  # 超宽图
+        return 240
+    return 180
+
 def kill_word():
     """Kill Word process to handle COM errors"""
     subprocess.call('taskkill /F /IM WINWORD.EXE', shell=True,
@@ -230,7 +293,9 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
         print("用法: python word_lesson_tool.py <doc文件路径>  读取表格内容")
-        print("     或作为模块导入: from word_lesson_tool import process_week, read_doc_tables")
+        print("     或作为模块导入: from word_lesson_tool import process_week, read_doc_tables,")
+        print("         set_simple_cell, set_complex_cell, add_image_to_cell, kill_word,")
+        print("         is_good_image, pick_images, calc_width")
         sys.exit(1)
     tables = read_doc_tables(sys.argv[1])
     for i, t in enumerate(tables):
